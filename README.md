@@ -51,7 +51,7 @@ Then, find the `aliases` and add `Facade` to the array.
 After installing, publish the package configuration file into your application by running
 
 ``` php
-php artisan vendor:publish adetoola/sms
+php artisan vendor:publish
 ```
 
 And a `sms.php` file will be created in your `app/config` directory.
@@ -79,17 +79,17 @@ This credentials will be used to authenticate each activity on the chosen gatewa
 ``` php
 'providers' => [
 
-	'Log' => [
+    'Log' => [
         'sender' =>env('SMS_SENDER', 'SENDER'),
     ],
 
     'SMS247Live' => [
         'sender' =>env('SMS_SENDER', 'SENDER'),
-		'email' => env('SMS_EMAIL', 'EMAIL'),
-		'sub_account' => env('SMS_SUB_ACCOUNT', 'SUB_ACCOUNT'),
-		'sub_account_password' => env('SMS_SUB_ACCOUNT_PASSWORD', 'SUB_ACCOUNT_PASSWORD'),
-		'session_id' => env('SMS_SESSION_ID', 'SESSION_ID'),
-	],
+        'email' => env('SMS_EMAIL', 'EMAIL'),
+        'sub_account' => env('SMS_SUB_ACCOUNT', 'SUB_ACCOUNT'),
+        'sub_account_password' => env('SMS_SUB_ACCOUNT_PASSWORD', 'SUB_ACCOUNT_PASSWORD'),
+        'session_id' => env('SMS_SESSION_ID', 'SESSION_ID'),
+    ],
 
     'X-Wireless' => [
         'sender' =>env('SMS_SENDER', 'SENDER'),
