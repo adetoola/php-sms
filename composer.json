@@ -1,5 +1,5 @@
 {
-    "name": "Adetoola/sms",
+    "name": "adetoola/sms",
     "description": "Several Nigerian SMS APIs integration",
     "type": "library",
     "keywords": [
@@ -10,7 +10,7 @@
         "message"
 
     ],
-    "homepage": "https://github.com/Adetoola/SMS",
+    "homepage": "https://github.com/adetoola/sms",
     "license": "MIT",
     "authors": [
         {
@@ -27,8 +27,7 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
-            "Adetoola\\SMS\\": "packages/adetoola/sms/src"
+            "Adetoola\\SMS\\": "src/"
         }
     }
 }
