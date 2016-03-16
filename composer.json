@@ -27,8 +27,7 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "app/",
-            "Adetoola\\SMS\\": "packages/adetoola/sms/src"
+            "Adetoola\\SMS\\": "src/"
         }
     }
 }
