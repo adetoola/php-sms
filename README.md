@@ -106,6 +106,7 @@ This credentials will be used to authenticate each activity on the chosen gatewa
 
 ### Methods
 
+
 | Method | LOG | SMS247LIVE | XWIRELESS | 50KOBO |
 | --- | --- | --- | --- | --- |
 | SMS::Send($recepient, $msg [, $sender, $msg_type]) | **+** | **+** | **+** | **+** |
@@ -127,6 +128,7 @@ This credentials will be used to authenticate each activity on the chosen gatewa
 | `$msg_type` | Normal SMS or Flash | 0 or 1 |
 | `$datetime` | Datetime in format `Y-m-d H:i:s`. | 2016-03-16 22:40:34 |
 | `$msg_id` | Message ID, provider by gateway | [a-zA-Z0-9] |
+
 
 ### Example
 
