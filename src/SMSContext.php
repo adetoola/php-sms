@@ -4,105 +4,146 @@ namespace Adetoola\SMS;
 
 use Adetoola\SMS\Gateways\FiftyKoboGateway;
 use Adetoola\SMS\Gateways\LogGateway;
-use Adetoola\SMS\Gateways\SMS247LiveGateway;
+use Adetoola\SMS\Gateways\SMSLive247Gateway;
 use Adetoola\SMS\Gateways\XWirelessGateway;
+
+use Adetoola\SMS\Exception\InvalidArgumentException;
 
 abstract class SMSContext
 {
 
 	/**
 	 * Default SMS provider
-	 * @type array
+	 * @var string
 	 */
 	protected $provider;
 
 	/**
+	 * Sender Id to display
+	 * @var string
+	 */
+	protected $sender;
+
+	/**
 	 * Credentials of chosen SMS provider
-	 * @type array
+	 * @var array
 	 */
 	protected $credentials;
 
 	/**
 	 * Country code to send SMS to
-	 * @type string
+	 * @var string
 	 */
-	private $countryCode;
+	private $country;
 
     /**
-	 * Choose SMS Gateway provider to use
+	 * Choose SMS Gateway to use
 	 * @type class
 	 */
-	private $strategy = null;
+	private $gateway = null;
 
-	public function __construct()
+	/**
+	 * Set the SMS Gateway provider to use
+	 * @param  String $provider
+	 * @return SMSGateway
+	 */
+	public function gateway(String $gateway): self
 	{
-
-		$this->init();
-
-		switch ($this->provider) {
-			case 'SMS247Live':
-				$this->strategy = new SMS247LiveGateway($this);
+		switch ($gateway) {
+			case 'SMSLive247':
+				$this->gateway = new SMSLive247Gateway($this);
 				break;
 			case 'Log':
-				$this->strategy = new LogGateway($this);
+				$this->gateway = new LogGateway($this);
 				break;
 			case 'X-Wireless':
-				$this->strategy = new XWirelessGateway($this);
+				$this->gateway = new XWirelessGateway($this);
 				break;
 
 			case '50Kobo':
-				$this->strategy = new FiftyKoboGateway($this);
+				$this->gateway = new FiftyKoboGateway($this);
 				break;
 		}
+
+		return $this;
+	}
+
+	/**
+	 * Set sender of SMS (can be alphanumeric)
+	 * @param  String $sender
+	 * @return SMSGateway
+	 */
+	public function sender(String $sender): self
+	{
+		# validate alphanumeric
+		if(preg_match("/^[0-9a-zA-Z\s]{1,11}$/", $sender) !== 1)
+		{
+			throw new InvalidArgumentException("Sender must be alphanumeric and cannot be longer than 11 characters.");
+		}
+		$this->sender = (string) $sender;
+
+		return $this;
+	}
+
+	/**
+	 * Set Country Code
+	 * @param  string    $country
+	 * @return SMSGateway
+	 */
+	public function country(string $country): self
+	{
+		// Replace '+', '-' and space with non-space
+		$this->country = (string) preg_replace(["/\s+/", "/\+/", "/-/"], '', $country);
+
+		return $this;
 	}
 
 	/**
 	 * Set up credentials needed by the providers
-	 *
-	 * @return void
+	 * @param  array  $credentials
+	 * @return SMSGateway
 	 */
-	private function init()
+	public function credentials(array $credentials): self
 	{
-		$this->provider = config('sms.default');
-		$this->sender = config('sms.sender');
-		$this->countryCode = config('sms.countryCode');
-		$this->credentials = config('sms.providers')[$this->provider];
+		$this->credentials = (array) $credentials;
+
+		return $this;
 	}
-	/**
-	 * Getter method to pass credentials across classes
-	 *
-	 * @return $credentials
-	 */
-	 public function getCredentials()
+
+	public function getGateway(): SMSGateway
+	{
+		return $this->gateway;
+	}
+
+	public function getSender(): string
+	{
+		return $this->sender;
+	}
+
+	 public function getCredentials(): array
 	 {
 	 	return $this->credentials;
 	 }
 
-	 /**
-	  * Getter metthod to pass countryCode accross classes
-	  *
-	  * @return string $countryCode
-	  */
-	 public function getCountryCode()
+	 public function getCountry(): int
 	 {
-	 	return $this->countryCode;
+	 	return $this->country;
 	 }
 
 	 /**
 	 * Send message with receivers
-	 * 
+	 *
 	 * @param $recepient
 	 * @param $message
 	 * @param $sender
 	 * @param $message_type
-	 * 
+	 *
 	 * @return string
-	 * 
-	 * @throws \Ruby\SMS\SMSException
+	 *
 	 */
-	public function Send($recepient, $message, $sender = null, $message_type = 0)
+	public function send($recepient, $message, $message_type = 0)
 	{
-		return $this->strategy->Send($recepient, $message, $sender, $message_type);
+		return $this->gateway->send($recepient, $message, $message_type);
 	}
 
 	/**
@@ -113,44 +154,41 @@ abstract class SMSContext
 	 * @param $datetime
 	 *
 	 * @return mixed
-	 * @throws \Ruy\SMS\SMSException
 	 */
-	public function Schedule($recepient, $message, $datetime, $sender = null, $message_type = 0)
+	public function schedule($recepient, $message, $datetime, $message_type = 0)
 	{
-		return $this->strategy->Schedule($recepient, $message, $datetime, $sender, $message_type);
+		return $this->gateway->schedule($recepient, $message, $datetime, $message_type);
 	}
-	
+
 	/**
 	 * Get balance from provider
 	  *
 	 * @return mixed
-	 * @throws \Ruy\SMS\SMSException
 	 */
-	public function Balance()
+	public function balance()
 	{
-		return $this->strategy->Balance();
+		return $this->gateway->balance();
 	}
-	
+
 	/**
 	 * Get the cost in units for the message
 	 * @params $message_id
 	 */
-	public function Charge($message_id)
+	public function charge($message_id)
 	{
-		return $this->strategy->Charge($message_id);
+		return $this->gateway->charge($message_id);
 	}
-	
+
 	/**
 	 * Get message status using message id
 	 *
 	 * @param $message_id
 	 *
 	 * @return mixed
-	 * @throws \Ruby\SMS\SMSException
 	 */
-	public function Status($message_id)
+	public function status($message_id)
 	{
-		return $this->strategy->Status($message_id);
+		return $this->gateway->status($message_id);
 	}
 
 	/**
@@ -159,14 +197,13 @@ abstract class SMSContext
 	 * @param $recepient
 	 *
 	 * @return mixed
-	 * @throws \Ruy\SMS\SMSException
 	 * @return Bool True|False
 	 */
-	public function Coverage($recepient)
+	public function coverage($recepient)
 	{
-		return $this->strategy->Coverage($recepient);
+		return $this->gateway->coverage($recepient);
 	}
-	
+
 	/**
 	 * Stops the delivery of a scheduled message
 	 * Will only stop messages which maybe queued within our router, and not messages which have already been delivered to a SMSC
@@ -174,27 +211,24 @@ abstract class SMSContext
 	 * @param $message_id
 	 *
 	 * @return mixed
-	 * @throws \Ruy\SMS\SMSException
 	 */
-	public function Stop($message_id)
+	public function stop($message_id)
 	{
-		return $this->strategy->Stop($message_id);
+		return $this->gateway->stop($message_id);
 	}
-	
+
 	/**
 	 * This enables you to search and return sent messages. Paging is used so that you return messages in batches instead of all at once.
 	 * @param $page_size
 	 * @param $page_number
 	 * @param $begin_date
 	 * @param $end_date
-	 * @param $sender
 	 * @param $contains
 	 *
 	 * @return mixed
-	 * @throws \Ruy\SMS\SMSException
 	 */
-	public function History($page_size = 5, $page_number = 1, $begin_date = null, $end_date = null, $sender = null, $contains = null)
+	public function history($page_size = 5, $page_number = 1, $begin_date = null, $end_date = null, $contains = null)
 	{
-		return $this->strategy->History($page_size = 5, $page_number = 1, $begin_date = null, $end_date = null, $sender = null, $contains = null);
+		return $this->gateway->history($page_size = 5, $page_number = 1, $begin_date = null, $end_date = null, $contains = null);
 	}
 }

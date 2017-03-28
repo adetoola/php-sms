@@ -1,6 +1,6 @@
-# Awelewa SMS
+# SMS
 
-Awelewa SMS is a succinct and flexible way to add Nigerian SMS Providers Integration to [Laravel 5.*](http://laravel.com/)
+SMS is a succinct and flexible way to add Nigerian SMS Providers Integration to PHP Apps.
 
 ## Contents
 - [Installation](#installation)
@@ -20,15 +20,15 @@ $ composer require adetoola/sms
 ```
 
 ### Via Composer in composer.json
-Begin by installing `sms` by editting your project's `composer.json` file. Just add
+Begin by installing `sms` by editing your project's `composer.json` file. Just add
 
 	'require": {
-		"adetoola/sms": "1.0.*"
+		"adetoola/sms": "2.0.*"
 	}
 
 Then run `composer install` or `composer update`.
 
-Open `config/app.php` add in the `providers` array.
+If you are using laravel, open `config/app.php` add in the `providers` array.
 
 ``` php
 'providers' => [
@@ -67,7 +67,7 @@ You can specify any of the supported sms gateway from the list below:
 - [ ] SMSTube
 
 ``` php
-'default' => 'SMS247Live',
+'default' => 'SMSLive247',
 ```
 
 ### SMS Gateway Credentials
@@ -85,9 +85,6 @@ This credentials will be used to authenticate each activity on the chosen gatewa
 
     'SMS247Live' => [
         'sender' =>env('SMS_SENDER', 'SENDER'),
-        'email' => env('SMS_EMAIL', 'EMAIL'),
-        'sub_account' => env('SMS_SUB_ACCOUNT', 'SUB_ACCOUNT'),
-        'sub_account_password' => env('SMS_SUB_ACCOUNT_PASSWORD', 'SUB_ACCOUNT_PASSWORD'),
         'session_id' => env('SMS_SESSION_ID', 'SESSION_ID'),
     ],
 
@@ -96,33 +93,41 @@ This credentials will be used to authenticate each activity on the chosen gatewa
     ],
 
     '50Kobo' => [
-        'sender' =>env('SMS_SENDER', 'SENDER'),          
+        'sender' =>env('SMS_SENDER', 'SENDER'),
     ],
 
 ],
 ```
 
 ## Usage
+Using SMS is quite simple.
+```php
+$sms = new Adetoola\SMS\SMS();
+$sms->sender($sender)->country($country)->credentials($credentials)->gateway('SMSLive247');
 
+$message_id = $sms->send('08123456789', 'Hi, I am using Adetoola SMS package');
+
+echo $message_id;
+```
 ### Methods
 
 
 | Method | LOG | SMS247LIVE | XWIRELESS | 50KOBO |
 | --- | --- | --- | --- | --- |
-| SMS::Send($recepient, $msg [, $sender, $msg_type]) | **+** | **+** | **+** | **+** |
-| SMS::Schedule($recepient, $msg, $datetime[, $sender, $msg_type])| **-** | **+** | **+** | **+** |
-| SMS::Balance() | **-** | **+** | **-** | **+** |
-| SMS::Charge($msg_id) | **+** | **+** | **+** | **+** |
-| SMS::Status($msg_id) | **+** | **+** | **+** | **+** |
-| SMS::Coverage($recepient) | **+** | **+** | **+** | **+** |
-| SMS::Stop($msg_id) | **-** | **+** | **+** | **+** |
-| SMS::History() | **-** | **+** | **+** | **+** |
+| SMS::send($recipient, $msg [, $msg_type]) | **+** | **+** | **+** | **+** |
+| SMS::schedule($recipient, $msg, $datetime[, $msg_type])| **-** | **+** | **+** | **+** |
+| SMS::balance() | **-** | **+** | **-** | **+** |
+| SMS::charge($msg_id) | **+** | **+** | **+** | **+** |
+| SMS::status($msg_id) | **+** | **+** | **+** | **+** |
+| SMS::coverage($recipient) | **+** | **+** | **+** | **+** |
+| SMS::stop($msg_id) | **-** | **+** | **+** | **+** |
+| SMS::history() | **-** | **+** | **+** | **+** |
 
 ### Valid Formats
 
 | Input | Description | Accepted Formats |
 | --- | --- | --- |
-| `$recepient` | Comma seperated numbers or number | +2348012345678, 2348012345678, 8012345678, 0812345678 |
+| `$recipient` | Comma separated numbers or number | +2348012345678, 2348012345678, 8012345678, 0812345678 |
 | `$msg` | Text message which will be sent to the numbers. |[a-zA-Z0-9+_-."'\s]{0,160} |
 | `$sender` | Number to display as sender | [a-zA-Z0-9]{1,11} |
 | `$msg_type` | Normal SMS or Flash | 0 or 1 |
@@ -154,4 +159,4 @@ If you discover any security related issues, please email adetola@rubyinteractiv
 
 ## License
 
-SMS is an open-sourced laravel package licensed under the [MIT license](http://opensource.org/licenses/MIT).
+SMS is an open-sourced package licensed under the [MIT license](http://opensource.org/licenses/MIT).

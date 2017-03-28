@@ -8,7 +8,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | You can specify any allowed sms service provider from list below:
-    | Allowed providers are: 'Log', SMS247Live', 'X-Wireless', '50Kobo'
+    | Allowed providers are: 'Log', 'SMSLive247', 'X-Wireless', '50Kobo'
     |
     */
 
@@ -41,7 +41,7 @@ return [
 		'Log' => [
             'sender' =>env('SMS_SENDER', 'SENDER'),
         ],
-        'SMS247Live' => [
+        'SMSLive247' => [
             'sender' =>env('SMS_SENDER', 'SENDER'),
 			'email' => env('SMS_EMAIL', 'EMAIL'),
 			'sub_account' => env('SMS_SUB_ACCOUNT', 'SUB_ACCOUNT'),
@@ -54,7 +54,7 @@ return [
         ],
         '50Kobo' => [
             'sender' =>env('SMS_SENDER', 'SENDER'),
-            
+
         ],
 
 	],

@@ -4,12 +4,12 @@ namespace Adetoola\SMS\Gateways;
 
 interface SMSGatewayInterface
 {
-	public function Send($recepient, $message, $sender = null, $message_type = 0);
-	public function Schedule($recepient, $message, $datetime, $sender = null, $message_type = 0);
-	public function Balance();
-	public function Charge($message_id);
-	public function Status($message_id);
-	public function Coverage($recepient);
-	public function Stop($message_id);
-	public function History();
+	public function send($recepient, $message, $message_type = 0);
+	public function schedule($recepient, $message, $datetime, $message_type = 0);
+	public function balance();
+	public function charge($message_id);
+	public function status($message_id);
+	public function coverage($recepient);
+	public function stop($message_id);
+	public function history();
 }
