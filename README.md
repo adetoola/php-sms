@@ -23,7 +23,7 @@ $ composer require adetoola/sms
 Begin by installing `sms` by editing your project's `composer.json` file. Just add
 
 	'require": {
-		"adetoola/sms": "2.0.*"
+		"adetoola/sms": "1.1.*"
 	}
 
 Then run `composer install` or `composer update`.
@@ -127,8 +127,8 @@ echo $message_id;
 
 | Input | Description | Accepted Formats |
 | --- | --- | --- |
-| `$recipient` | Comma separated numbers or number | +2348012345678, 2348012345678, 8012345678, 0812345678 |
-| `$msg` | Text message which will be sent to the numbers. |[a-zA-Z0-9+_-."'\s]{0,160} |
+| `$recipient` | Comma separated numbers, number or array | +2348012345678, 2348012345678, 8012345678, 0812345678 |
+| `$msg` | Text message which will be sent to the numbers. |[a-zA-Z0-9+_-."'\s]{1,160} |
 | `$sender` | Number to display as sender | [a-zA-Z0-9]{1,11} |
 | `$msg_type` | Normal SMS or Flash | 0 or 1 |
 | `$datetime` | Datetime in format `Y-m-d H:i:s`. | 2016-03-16 22:40:34 |
