@@ -22,18 +22,6 @@ abstract class SMSGateway
 	}
 
 	/**
-	 * Build URL to call gateway service.
-	 *
-	 * @param string $query
-	 *
-	 * @return string
-	 */
-	protected function build(string $query =''): string
-	{
-		return (string) $this->api_endpoint . $query;
-	}
-
-	/**
      * Check if recipient already has country code prepended
      * @param  string  $recipient
      * @return boolean
@@ -70,7 +58,7 @@ abstract class SMSGateway
     {
         array_walk($recipient, function(&$value, $key) {
             if( ! $this->hasCountry($value) ) {
-                $value = $country . ltrim($value, '0');
+                $value = $this->country . ltrim($value, '0');
             }
         });
         return $recipient;

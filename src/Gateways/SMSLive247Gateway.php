@@ -4,6 +4,9 @@ namespace Adetoola\SMS\Gateways;
 
 use Adetoola\SMS\Exception\SMSException;
 
+use GuzzleHttp\Client;
+use Psr\Http\Message\ResponseInterface as Response;
+
 class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 {
 	protected $api_endpoint = "http://www.smslive247.com/http/index.aspx";
@@ -18,10 +21,10 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 	 *
 	 * @return string
 	 */
-	protected function buildQuery($command, Array $additional_parameters = [])
+	protected function build(string $command, array $additional_parameters = []): string
 	{
 		// add ? then build query
-		return '?' . http_build_query($this->buildBody($command, $additional_parameters));
+		return (string) $this->api_endpoint . '?' . http_build_query($this->buildBody($command, $additional_parameters));
 	}
 
 	/**
@@ -92,35 +95,46 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 		return array_merge($default, $session, $additional_parameters);
 	}
 
-	private function request($command, $additional_params = [])
+	/**
+	 * Client wrapper to call the gateway's service
+	 * @param  string $command
+	 * @param  array  $additional_params
+	 * @return mixed
+	 */
+	private function request(string $command, array $additional_params = []): Response
 	{
-		$url = $this->build($this->buildQuery($command, $additional_params));
-		return file_get_contents($url);
+		$url = $this->build($command, $additional_params);
+		$client = new Client([
+		    'base_uri' => $this->api_endpoint,
+		    'timeout'  => 60.0,
+		]);
+
+		return $client->request('GET', $url);
 	}
 
 	/**
-	 * Get SMS247Live API response
-	 *
+	 * Parse the response object returned by gateway
+	 * @param  Response $response
+	 * @return mixed
 	 */
-	private function parseResponse($response)
+	private function response(Response $response)
 	{
-		$response_arr = explode(':', $response, 2);
+		$response_arr = explode(':', $response->getBody(), 2);
 		if($response_arr[0] == 'OK'){
 			return trim($response_arr[1]);
-		}else{
-			throw new SMSException ('An error occurred:' . $response_arr[1] );
 		}
+
+		throw new SMSException ('An error occurred:' . $response_arr[1] );
 	}
 
 	/**
-	 *
-	 * One can send to multiple destination addresses by delimiting the addresses with commas. The basic parameters required are sendto (the handset number to which the message is being sent) and message (the content of the message).
-	 * A maximum of 100 comma separated destination addresses per SendMsg are possible, if you are calling the command via a GET, or alternatively, 300 destination addresses if you are submitting via a POST.
-	 * Each message returns a unique identifier in the form of a messageID. This can be used to track and monitor any given message.
-	 * The messageID is returned after each post.
-	 *
+	 * Send an SMS (immediately)
+	 * @param  string|array      $recipient
+	 * @param  string      $message
+	 * @param  int|integer $message_type
+	 * @return array
 	 */
-	public function send($recipient, $message, $message_type = 0)
+	public function send($recipient, string $message, int $message_type = 0, array $options = [])
 	{
 		$list = $this->recipient($recipient);
 		$this->message = $this->message($message);
@@ -132,66 +146,54 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 		foreach($batches as $batch)
 		{
 			$this->recipient = implode(',', $batch);
-			$response = $this->request(__FUNCTION__);
-			$message_id[] = $this->parseResponse($response);
+			$response = $this->request(__FUNCTION__, $options);
+			$message_id[] = $this->response($response);
 		}
 		return $message_id;
 	}
 
-	public function schedule($recipient, $message, $datetime, $message_type = 0)
+	public function schedule($recipient, string $message, $datetime, int $message_type = 0)
 	{
-		$this->recipient = $this->recipient($recipient);
-		$this->message = $this->message($message);
-		$this->message_type = ($message_type == 1) ? '1' : '0';
-		$this->send_time = $datetime;
-		$response = $this->request(__FUNCTION__, ['sendtime' => $this->send_time]);
-		$this->message_id = $this->parseResponse($response);
-		return $this->message_id;
+		return $this->send($recipient, $message, $message_type = 0, ['sendtime' => $datetime]);
 	}
 
 	/**
-	 * This will return the number of credits available on this particular account.
-	 * The account balance is returned as an integer value.
-	 * Authentication is required for this API call.
-	 *
+	 * Return the number of credits available on this particular account.
+	 * @return int
 	 */
-	public function balance()
+	public function balance(): int
 	{
 		$response = $this->request(__FUNCTION__);
-		return $this->parseResponse($response);
+		return (int) $this->response($response);
 	}
 
 	/**
-	 * This command enables the user to query total credits charged for a delivered message.
-	 * Authentication is required for this API call.
-	 *
+	 * Check total credits charged for a delivered message.
+	 * @param  string $message_id
+	 * @return string
 	 */
-	public function charge($message_id)
+	public function charge(string $message_id): string
 	{
 		$response = $this->request(__FUNCTION__, ['messageid' => $message_id]);
-		return $this->parseResponse($response);
+		return (string) $this->response($response);
 	}
 
 	/**
-	 * This command is used to return the status of a message. You should query the status using the MessageID.
-	 * The MessageID is the message ID returned by the Gateway when a message has been successfully submitted.
-	 * Authentication is required for this API call.
-	 *
+	 * Return status of a message
+	 * @param  string $message_id
+	 * @return [type]             [description]
 	 *
 	 * @return $msg_status int 0 and others
 	 * 0 means msg sent
 	 */
-	public function status($message_id)
+	public function status(string $message_id)
 	{
 		$response = $this->request(__FUNCTION__, ['messageid' => $message_id]);
-		return $this->parseResponse($response);
+		return $this->response($response);
 	}
 
 	/**
-	 * This command enables users to check our coverage of a network or mobile number, without sending a message to that number.
-	 * Authentication is required for this API call.
-	 * This call should NOT be used before sending each message.
-	 *
+	 * Check coverage of a network or mobile number, without sending a message to that number.
 	 *
 	 * @return Bool True|False
 	 */
@@ -200,20 +202,19 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 		$msisdn = $this->recipient($send_to);
 		$response = $this->request(__FUNCTION__, ['msisdn' => $msisdn]);
 
-		return (bool) $this->parseResponse($response);
+		return (bool) $this->response($response);
 	}
 
 	/**
-	 * This enables you to stop the delivery of a scheduled message.
-	 * This command can only stop messages which maybe queued within our router, and not messages which have already been delivered to a SMSC.
-	 * This command is therefore only really useful for messages with deferred delivery times.
-	 * Authentication is required for this API call.
-	 *
+	 * Stop the delivery of a scheduled message.
+	 * Useful only for messages that were scheduled (i.e. messages are queued in gateway's router but are not yet forwarded to SMSC)
+	 * @param  string $message_id
+	 * @return [type]
 	 */
-	public function stop($message_id)
+	public function stop(string $message_id)
 	{
 		$response = $this->request(__FUNCTION__, ['messageid' => $message_id]);
-		return $this->parseResponse($response);
+		return $this->response($response);
 	}
 
 	/**
@@ -237,6 +238,6 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 			'contains' => ($this->contains) ? $this->contains : null
 		]);
 
-		return $this->parseResponse($response);
+		return $this->response($response);
 	}
 }
