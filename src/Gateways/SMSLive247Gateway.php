@@ -5,7 +5,9 @@ namespace Adetoola\SMS\Gateways;
 use Adetoola\SMS\Exception\SMSException;
 
 use GuzzleHttp\Client;
-use Psr\Http\Message\ResponseInterface as Response;
+use GuzzleHttp\Exception\ClientException;
+use Psr\Http\Message\ResponseInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 {
@@ -34,7 +36,7 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 	 *
 	 * @return array
 	 */
-	protected function buildBody($command, $additional_parameters = [])
+	protected function buildBody($command, $additional_parameters = []): array
 	{
 		$default = [];
 
@@ -101,15 +103,25 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 	 * @param  array  $additional_params
 	 * @return mixed
 	 */
-	private function request(string $command, array $additional_params = []): Response
+	private function request(string $command, array $additional_params = [])
 	{
 		$url = $this->build($command, $additional_params);
+		echo $url;
 		$client = new Client([
 		    'base_uri' => $this->api_endpoint,
 		    'timeout'  => 60.0,
+		    'http_errors' => false
 		]);
 
-		return $client->request('GET', $url);
+		try {
+			$response = $client->request('GET', $url);
+		} catch (ClientException $e) {
+			$status_code = $e->getResponse()->getStatusCode();
+			// var_dump($e->getBody(true));
+			return;
+		}
+
+		return $response;
 	}
 
 	/**
@@ -117,14 +129,29 @@ class SMSLive247Gateway extends SMSGateway implements SMSGatewayInterface
 	 * @param  Response $response
 	 * @return mixed
 	 */
-	private function response(Response $response)
+	private function response(ResponseInterface $response)
 	{
-		$response_arr = explode(':', $response->getBody(), 2);
-		if($response_arr[0] == 'OK'){
-			return trim($response_arr[1]);
+		if( $response->getStatusCode() !== 200 ) {
+			$data = [
+				'errors' => 'Bad Request',
+				'code' => $response->getStatusCode(),
+				'status_code' => $response->getStatusCode(),
+			];
+		}else{
+			$response_arr = explode(':', $response->getBody());
+			if($response_arr[0] == 'OK'){
+				return trim($response_arr[1]);
+			}
+
+			$data = [
+				'errors' => trim($response_arr[2]),
+				'code' => trim($response_arr[1]),
+				'status_code' => $response->getStatusCode(),
+			];
 		}
 
-		throw new SMSException ('An error occurred:' . $response_arr[1] );
+		$response = new JsonResponse(json_encode($data), $response->getStatusCode());
+		$response->send();
 	}
 
 	/**
