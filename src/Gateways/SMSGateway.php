@@ -16,7 +16,7 @@ abstract class SMSGateway
 
 	public function __construct(SMSContext $smscontext)
 	{
-		$this->sender = '234';
+		$this->sender = $smscontext->getSender();
 		$this->country = $smscontext->getCountry();
 		$this->credentials = $smscontext->getCredentials();
 	}
